@@ -6,7 +6,7 @@ and artifacts, measure image tiles, and normalize stain appearance against chose
 Its reports bring measurements, visual outputs and execution details together for review.
 
 [Features](#key-features) · [Choose an interface](#three-ways-to-run) ·
-[Run the full pipeline](#run-the-full-pipeline) · [Repository overview](#repository-overview) · [Third-party terms](#third-party-terms) · [Long-term goal](#long-term-goal)
+[Run the full pipeline](#run-the-full-pipeline) · [Repository overview](#repository-overview) · [License](#license) · [Long-term goal](#long-term-goal)
 
 ## Key features
 
@@ -56,6 +56,7 @@ The repository is organized as follows:
 |---|---|
 | [src/](src/README.md) | Standalone Python project, usage guides, runtime package and deployment files |
 | [demo.ipynb](demo.ipynb) | Standalone interactive pipeline demonstration |
+| [LICENSE](LICENSE) | Apache License 2.0 |
 | [THIRD_PARTY_NOTICES.md](src/THIRD_PARTY_NOTICES.md) | Terms and attribution for bundled models and example images |
 
 For individual source files, start with the [source inventory](src/README.md#project-files).
@@ -63,7 +64,11 @@ For pipeline internals, use the [package guide](src/pathnd_qc/README.md#guides).
 Build and release instructions live in the [deployment guide](src/deploy/verily/README.md);
 verification commands are in [release checks](src/README.md#release-checks).
 
-## Third-party terms
+## License
+
+Path-ND QC is copyright 2026 The 10,000 Brains Project and licensed under the
+[Apache License 2.0](LICENSE). The GrandQC compatibility patches are the exception: as
+adaptations of GrandQC, they are licensed under CC BY-NC-SA 4.0 (see [NOTICE](src/NOTICE)).
 
 Pen detection and GrandQC artifact detection use third-party models with their own terms.
 GrandQC is distributed under a non-commercial license (CC BY-NC-SA 4.0 / CC BY-NC 4.0), and use is

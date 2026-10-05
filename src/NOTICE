@@ -1,0 +1,7 @@
+Path-ND QC
+Copyright 2026 The 10,000 Brains Project
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE), except for the
+third-party material listed in THIRD_PARTY_NOTICES.md, which remains under its own terms.
+In particular, the GrandQC compatibility patches in pathnd_qc/external/patches/ and
+external/grandqc/patches/ are adaptations of GrandQC and are licensed under CC BY-NC-SA 4.0.

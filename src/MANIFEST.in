@@ -1,4 +1,4 @@
-include pyproject.toml README.md USAGE_CLI.md USAGE_LIBRARY.md USAGE_VERILY.md build_hooks.py compose.yaml requirements.txt package-freeze.json THIRD_PARTY_NOTICES.md
+include pyproject.toml README.md USAGE_CLI.md USAGE_LIBRARY.md USAGE_VERILY.md build_hooks.py compose.yaml requirements.txt package-freeze.json LICENSE NOTICE THIRD_PARTY_NOTICES.md
 recursive-include pathnd_qc *.py README.md MIGRATION.md defaults.json catalog.json *.patch *.png
 recursive-exclude pathnd_qc *plan*.md
 recursive-include deploy/verily *.py *.sh *.wdl *.json *.csv *.yaml deploy.env.example README.md deployment-status.md Dockerfile Dockerfile.dockerignore gcloudignore

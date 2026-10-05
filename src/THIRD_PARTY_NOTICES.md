@@ -1,5 +1,8 @@
 # Third-party notices
 
+Path-ND QC's own code is licensed under the Apache License 2.0; see [LICENSE](LICENSE) and
+[NOTICE](NOTICE). The material below is not covered by that license.
+
 Path-ND QC uses, downloads or redistributes the third-party models, code and images below.
 Each remains under its owner's terms, which are summarized here for convenience; the linked
 upstream terms are authoritative. **Several of these terms restrict use to non-commercial

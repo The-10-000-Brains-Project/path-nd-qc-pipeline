@@ -71,6 +71,7 @@ is supplied on its own. The runtime's individual modules are mapped in
 | `external/` (`src/external/` in the workspace; development checkout only) | Optional local model assets and compatibility wrapper; see [model locations](pathnd_qc/external/README.md#model-locations). Excluded from distributions |
 | [deploy/verily/](deploy/verily/README.md#files-in-this-directory) | WDLs, containers, deployment helpers and input examples |
 | `tests/` (repository checkout only) | Regression suites and synthetic fixtures; see the [test guide](https://github.com/The-10-000-Brains-Project/path-nd-qc-pipeline/blob/main/src/tests/README.md) |
+| [LICENSE](LICENSE), [NOTICE](NOTICE) | Apache License 2.0 and the project copyright notice |
 | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Terms and attribution for GrandQC, WSISegQC and SEA-AD material |
 | [pyproject.toml](pyproject.toml) | Build metadata, dependencies and installed commands |
 | [requirements.txt](requirements.txt) | Installs this project with the dependencies in `pyproject.toml`; not a lockfile |

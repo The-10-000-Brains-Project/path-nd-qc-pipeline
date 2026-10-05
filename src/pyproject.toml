@@ -7,7 +7,8 @@ name = "pathnd-qc"
 version = "0.5.0"
 description = "Whole-slide quality control, stain normalization and resumable batch processing"
 readme = "pathnd_qc/README.md"
-license-files = ["THIRD_PARTY_NOTICES.md"]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
 requires-python = ">=3.12"
 dependencies = [
   "numpy>=2.0,<3", "scipy>=1.14,<2", "scikit-image>=0.26,<0.27",

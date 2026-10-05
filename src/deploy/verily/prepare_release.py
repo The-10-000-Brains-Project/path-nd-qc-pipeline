@@ -64,7 +64,7 @@ def prepare(out_dir: Path, project: Path = PROJECT) -> dict:
         staging.mkdir()
         for name in ("pyproject.toml", "MANIFEST.in", "build_hooks.py", "README.md", "compose.yaml",
                      "requirements.txt", "package-freeze.json", "USAGE_CLI.md", "USAGE_LIBRARY.md",
-                     "USAGE_VERILY.md", "THIRD_PARTY_NOTICES.md"):
+                     "USAGE_VERILY.md", "LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"):
             shutil.copy2(project / name, staging / name)
         for name in ("pathnd_qc", "deploy"):
             shutil.copytree(project / name, staging / name,

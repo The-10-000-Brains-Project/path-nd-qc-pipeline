@@ -46,6 +46,9 @@ jobs:
           python -m pip check
           python -c "import torch, torchvision; print(torch.__version__, torchvision.__version__); print(torchvision.ops.nms(torch.tensor([[0.,0.,1.,1.]]), torch.tensor([1.]), 0.5))"
 
+      - name: Check license copies match
+        run: cmp LICENSE src/LICENSE
+
       - name: Verify frozen package
         run: python src/deploy/verily/prepare_release.py --check
 
