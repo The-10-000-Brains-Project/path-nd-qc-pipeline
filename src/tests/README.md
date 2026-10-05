@@ -17,11 +17,14 @@ python -m pip install -e ./src
 python src/tests/run_all.py
 ```
 
-The runner executes every `smoke_*.py` and `test_*.py` file here, plus both workflow suites,
-and exits nonzero if any suite fails. Individual scripts can also be run directly.
-The download suite starts a localhost HTTP server and
+The runner executes every `smoke_*.py` and `test_*.py` file here, the unit tests in
+`pathnd_qc/*/tests/`, and both workflow suites, and exits nonzero if any suite fails.
+Individual scripts can also be run directly. The download suite starts a localhost HTTP server and
 needs permission to bind a local port. The batch suite's process-group checks exercise POSIX
 signals; use macOS or Linux to run the full set.
+
+Continuous integration runs this suite and the freeze check on Linux for every push to `main` and
+every pull request; see [ci.yml](../../.github/workflows/ci.yml).
 
 ## Files
 

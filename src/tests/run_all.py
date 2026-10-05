@@ -1,4 +1,4 @@
-"""Run checkout smoke/unit suites and both workflow suites with the same interpreter.
+"""Run checkout, in-package and workflow test suites with the same interpreter.
 
 Set PATHND_TEST_SOURCE_ARCHIVE to include the bucket workflow's release-archive case.
 Run from any directory: python /path/to/repo/src/tests/run_all.py
@@ -14,6 +14,7 @@ def main():
     source = Path(__file__).resolve().parents[1]
     test_dir = source / "tests"
     suites = sorted(test_dir.glob("smoke_*.py")) + sorted(test_dir.glob("test_*.py"))
+    suites += sorted((source / "pathnd_qc").glob("**/tests/test_*.py"))
     suites += [
         source / "deploy/verily" / name
         for name in ("test_workflow.py", "test_bucket_workflow.py")

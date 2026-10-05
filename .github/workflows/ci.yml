@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.12 is the oldest supported version.
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: src/pyproject.toml
+
+      # CPU-only Torch first, from the matching index, so pip does not pull CUDA wheels.
+      - name: Install CPU Torch and torchvision
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "torch>=2.6,<3" "torchvision>=0.21,<1" \
+            --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install package
+        run: |
+          python -m pip install ./src
+          python -m pip check
+          python -c "import torch, torchvision; print(torch.__version__, torchvision.__version__); print(torchvision.ops.nms(torch.tensor([[0.,0.,1.,1.]]), torch.tensor([1.]), 0.5))"
+
+      - name: Verify frozen package
+        run: python src/deploy/verily/prepare_release.py --check
+
+      - name: Run test suites
+        run: python src/tests/run_all.py
