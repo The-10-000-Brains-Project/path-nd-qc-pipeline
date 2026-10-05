@@ -1,0 +1,29 @@
+{
+  "grandqc": {
+    "repository": "https://github.com/cpath-ukk/grandqc.git",
+    "commit": "002688d74a4ac86dfbb816a96df8461d6080f88a",
+    "patch_version": 2
+  },
+  "pen_folder": "https://drive.google.com/drive/folders/1P3E9kZDM7A7cM06RR47kywvQCL3X0HJz",
+  "weights": {
+    "pen.pt": {
+      "sha256": "33b58cc9cb9e4fb7404ddbe96bc5c869c1ef738ff5356371806dfce2749572a6"
+    },
+    "GrandQC_MPP15.pth": {
+      "sha256": "6e90ec8548d4050734c30e30d5ca7fe67e84b59b1dd8ae338447dad90bae4ff1",
+      "url": "https://zenodo.org/records/14041538/files/GrandQC_MPP15.pth?download=1"
+    },
+    "GrandQC_MPP1.pth": {
+      "sha256": "cda7506dbb2e21be1410077d4f55632e7073fe068cf318df8fbc185a66806ecf",
+      "url": "https://zenodo.org/records/14041538/files/GrandQC_MPP1.pth?download=1"
+    },
+    "GrandQC_MPP2.pth": {
+      "sha256": "703d21cb3cac5b0797b145ca55428f21ab25bad18e3738ed8a3b6d42bbfcb61c",
+      "url": "https://zenodo.org/records/14041538/files/GrandQC_MPP2.pth?download=1"
+    },
+    "Tissue_Detection_MPP10.pth": {
+      "sha256": "0e3577628a553774419a5b87a2947531988e07175b9e1a8048f53b6188f4d76e",
+      "url": "https://zenodo.org/records/14507273/files/Tissue_Detection_MPP10.pth?download=1"
+    }
+  }
+}

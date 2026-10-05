@@ -1,0 +1,40 @@
+# Prepare the default build context first:
+# python deploy/verily/prepare_release.py --out dist/deployment/0.5.0-frozen
+# For another snapshot, set PATHND_RELEASE_DIR to the directory containing source/.
+# The standard image includes inference dependencies and GrandQC; provide pen weights in request.json.
+name: pathnd-qc
+
+x-runtime: &runtime
+  image: ${PATHND_IMAGE:-pathnd-qc:0.5.0-frozen}
+  platform: linux/amd64
+  build:
+    context: ${PATHND_RELEASE_DIR:-./dist/deployment/0.5.0-frozen}/source
+    dockerfile: deploy/verily/Dockerfile
+    target: pipeline
+  init: true
+  working_dir: /work
+  restart: "no"
+  cpus: ${PATHND_CPUS:-4}
+  mem_limit: ${PATHND_MEMORY:-16g}
+  volumes:
+    - type: bind
+      source: ${PATHND_INPUT_DIR:-./inputs}
+      target: /inputs
+      read_only: true
+      bind:
+        create_host_path: false
+    - type: bind
+      source: ${PATHND_OUTPUT_DIR:-./outputs}
+      target: /work
+      bind:
+        create_host_path: false
+
+services:
+  qc:
+    <<: *runtime
+    command: [python, /opt/pathnd/run_workflow.py, /inputs/request.json]
+  batch:
+    <<: *runtime
+    profiles: [batch]
+    entrypoint: [pathnd-qc-batch]
+    command: [--help]

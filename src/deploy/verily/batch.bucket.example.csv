@@ -1,0 +1,3 @@
+slide,stain
+gs://YOUR_SLIDE_BUCKET/example_a.svs,Hirano
+gs://YOUR_SLIDE_BUCKET/example_b.svs,GFAP

@@ -1,0 +1,17 @@
+{
+  "slide": "/inputs/example.svs",
+  "stain": "Hirano",
+  "components": [
+    "tissue_segmentation",
+    "fold_detection",
+    "pen_detection",
+    "staining_quality",
+    "focus",
+    "tile_selection",
+    "tile_metrics",
+    "tile_artifacts",
+    "stain_normalization"
+  ],
+  "expected_pipeline_version": "0.5.0",
+  "config_file": "/inputs/references.json"
+}

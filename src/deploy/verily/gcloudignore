@@ -1,0 +1,18 @@
+# Explicit allowlist: do not upload slides, reports, credentials or the parent workspace.
+**
+!pyproject.toml
+!MANIFEST.in
+!build_hooks.py
+!package-freeze.json
+!README.md
+!USAGE_CLI.md
+!USAGE_LIBRARY.md
+!pathnd_qc/
+!pathnd_qc/**
+!deploy/
+!deploy/verily/
+!deploy/verily/**
+**/__pycache__
+**/*.pyc
+**/tests
+**/*plan*.md

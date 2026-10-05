@@ -1,0 +1,13 @@
+diff --git a/01_WSI_inference_OPENSLIDE_QC/wsi_tis_detect.py b/01_WSI_inference_OPENSLIDE_QC/wsi_tis_detect.py
+index b19f649..81fa10b 100644
+--- a/01_WSI_inference_OPENSLIDE_QC/wsi_tis_detect.py
++++ b/01_WSI_inference_OPENSLIDE_QC/wsi_tis_detect.py
+@@ -10,7 +10,7 @@ from wsi_tis_detect_helper_fx import get_preprocessing, make_class_map
+ 
+ 
+ # DEVICE
+-DEVICE = 'cuda'
++DEVICE = 'cpu'
+ '''
+ 'cuda' - NVIDIA GPU card
+ 'mps'    - APPLE Silicon

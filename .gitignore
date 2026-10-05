@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+
+# Upstream GrandQC checkout — cloned by src/external/setup.sh, then patched
+# from src/external/grandqc/patches/. CC BY-NC-SA 4.0; not vendored.
+src/external/grandqc/repo/
+
+# Internal-only material kept beside the checkout (design notes, internal data, workspace settings)
+local/
+
+# Deployment target settings for a real workspace; copy from deploy.env.example
+src/deploy/verily/deploy.env

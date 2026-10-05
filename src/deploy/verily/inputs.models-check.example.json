@@ -1,0 +1,12 @@
+{
+  "PathNDQC.slide": "gs://YOUR_SLIDE_BUCKET/example.svs",
+  "PathNDQC.stain": "HE",
+  "PathNDQC.docker_image": "REGION-docker.pkg.dev/PROJECT/REPOSITORY/pathnd-qc@sha256:IMAGE_DIGEST",
+  "PathNDQC.components": [
+    "tissue_segmentation",
+    "pen_detection",
+    "tile_selection",
+    "tile_artifacts"
+  ],
+  "PathNDQC.expected_pipeline_version": "0.5.0"
+}

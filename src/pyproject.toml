@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pathnd-qc"
+version = "0.5.0"
+description = "Whole-slide quality control, stain normalization and resumable batch processing"
+readme = "pathnd_qc/README.md"
+license-files = ["THIRD_PARTY_NOTICES.md"]
+requires-python = ">=3.12"
+dependencies = [
+  "numpy>=2.0,<3", "scipy>=1.14,<2", "scikit-image>=0.26,<0.27",
+  "opencv-python-headless>=4.10,<6", "pillow>=11,<13", "pandas>=2.2,<4",
+  "tiffslide>=2.5,<5", "fsspec>=2024.10", "gcsfs>=2024.10",
+  "s3fs>=2024.10", "adlfs>=2024.12",
+  "imagecodecs>=2024.9", "filelock>=3.16,<4", "certifi>=2024.8",
+  "torch>=2.6,<3", "torchvision>=0.21,<1", "segmentation-models-pytorch==0.5.0", "timm>=1.0,<1.1",
+  "openslide-python>=1.4,<2", "openslide-bin>=4.0,<5", "tqdm>=4.66,<5", "gdown>=5.2,<6",
+]
+
+[project.scripts]
+pathnd-qc = "pathnd_qc.cli:main"
+pathnd-qc-batch = "pathnd_qc.batch.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+include-package-data = false
+
+[tool.setuptools.cmdclass]
+build_py = "build_hooks.build_py"
+sdist = "build_hooks.sdist"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pathnd_qc", "pathnd_qc.*"]
+exclude = ["pathnd_qc.*.tests", "pathnd_qc.*.tests.*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"pathnd_qc" = ["README.md", "../USAGE_CLI.md", "../USAGE_LIBRARY.md", "MIGRATION.md", "_build_provenance.json", "assets/*.png"]
+"*" = ["README.md", "assets/*.png"]
+"pathnd_qc.config" = ["defaults.json"]
+"pathnd_qc.external" = ["catalog.json", "patches/*.patch"]

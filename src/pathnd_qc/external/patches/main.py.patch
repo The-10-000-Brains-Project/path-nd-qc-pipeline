@@ -1,0 +1,35 @@
+diff --git a/01_WSI_inference_OPENSLIDE_QC/main.py b/01_WSI_inference_OPENSLIDE_QC/main.py
+index a305bdc..1011067 100644
+--- a/01_WSI_inference_OPENSLIDE_QC/main.py
++++ b/01_WSI_inference_OPENSLIDE_QC/main.py
+@@ -3,6 +3,7 @@ Comments to version:
+ - Uses tissue maps from tissue detector. Therefore, slides should be processed by tissue detector firstly.
+ - Consider adding color schema if you use the tool for a new entity
+ """
++import grandqc_compat  # noqa: F401  -- must precede torch.load
+ from wsi_colors import colors_QC7 as colors
+ import torch
+ import argparse
+@@ -19,7 +20,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000
+ 
+ 
+ # DEVICE
+-DEVICE = 'cuda'
++DEVICE = 'cpu'
+ '''
+ 'cuda:0' - NVIDIA GPU card
+ 'mps'    - APPLE Silicon
+@@ -37,8 +38,13 @@ parser.add_argument('--end', dest='end', default=-1, help='end num of WSIs', typ
+ parser.add_argument('--ol_factor', dest='ol_factor', default=10,
+                     help='reduction factor of the overlay compared to dimensions of original WSI', type=int)
+ 
++parser.add_argument('--device', dest='device', default='cpu',
++                    help='torch device; added locally -- upstream hard-codes cuda', type=str)
++
+ args = parser.parse_args()
+ 
++DEVICE = args.device
++
+ MPP_MODEL = args.MPP_MODEL
+ start = args.start
+ end = args.end

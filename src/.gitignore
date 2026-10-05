@@ -1,0 +1,7 @@
+# Generated Python and packaging files
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/

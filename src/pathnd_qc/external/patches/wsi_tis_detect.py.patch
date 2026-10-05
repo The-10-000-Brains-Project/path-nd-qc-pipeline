@@ -1,0 +1,23 @@
+diff --git a/01_WSI_inference_OPENSLIDE_QC/wsi_tis_detect.py b/01_WSI_inference_OPENSLIDE_QC/wsi_tis_detect.py
+index b19f649..81fa10b 100644
+--- a/01_WSI_inference_OPENSLIDE_QC/wsi_tis_detect.py
++++ b/01_WSI_inference_OPENSLIDE_QC/wsi_tis_detect.py
+@@ -10,7 +10,7 @@ from wsi_tis_detect_helper_fx import get_preprocessing, make_class_map
+ 
+ 
+ # DEVICE
+-DEVICE = 'cuda'
++DEVICE = 'cpu'
+ '''
+ 'cuda' - NVIDIA GPU card
+ 'mps'    - APPLE Silicon
+@@ -62,6 +62,8 @@ preprocessing_fn = smp.encoders.get_preprocessing_fn(ENCODER_MODEL_TD, ENCODER_MODEL
+ model = smp.UnetPlusPlus(
+     encoder_name=ENCODER_MODEL_TD,
+-    encoder_weights=ENCODER_MODEL_TD_WEIGHTS,
++    # The full tissue checkpoint below supplies encoder and decoder parameters.
++    # Keep ImageNet preprocessing above, without downloading unused initial weights.
++    encoder_weights=None,
+     classes=2,
+     activation=None,
+ )

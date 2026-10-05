@@ -1,0 +1,27 @@
+{
+  "m2": {
+    "read": {
+      "target_mpp": 8.0
+    },
+    "folds": {
+      "d_path_stains": [
+        "hirano",
+        "lfb",
+        "lfb/h&e",
+        "lfb-he",
+        "lfb/he"
+      ],
+      "fline_enabled": true,
+      "fline_sigmas_um": [
+        35.0,
+        70.0,
+        105.0
+      ],
+      "fline_ball_um": 520.0,
+      "fline_st_sigma_um": 70.0,
+      "fline_eps_frac": 0.01,
+      "fline_hard_index": 200,
+      "fline_min_area_um2": 44800.0
+    }
+  }
+}

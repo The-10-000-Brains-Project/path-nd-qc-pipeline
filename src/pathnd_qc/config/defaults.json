@@ -1,0 +1,653 @@
+{
+  "components": {
+    "tissue_segmentation": true,
+    "fold_detection": true,
+    "pen_detection": true,
+    "staining_quality": true,
+    "focus": true,
+    "stain_normalization": true,
+    "tile_selection": true,
+    "tile_metrics": true,
+    "tile_artifacts": true
+  },
+  "shared": {
+    "tile_px": 512,
+    "alpha_blend": 0.45
+  },
+  "ingestion": {
+    "target_magnification": 20,
+    "mpp_tolerance_abs": 0.05,
+    "mpp_min_plausible": 0.1,
+    "mpp_max_plausible": 10.0,
+    "mpp_mag_product_min": 5.0,
+    "mpp_mag_product_max": 15.0,
+    "integrity_max_read_px": 4194304,
+    "n_spot_regions": 3,
+    "spot_size": 256,
+    "verify_localize": true,
+    "localize_retries": 3,
+    "localize_retry_backoff_s": 2.0,
+    "localize_stall_timeout_s": 120.0,
+    "localize_progress_every_s": 30.0,
+    "thumbnail_max_size": 1024
+  },
+  "m2": {
+    "read": {
+      "target_mpp": 8.0,
+      "mpp_tolerance_rel": 0.1,
+      "max_read_px": 67108864,
+      "max_plane_px": 67108864
+    },
+    "tissue": {
+      "default_method": "union",
+      "hirano_stains": [
+        "hirano"
+      ],
+      "sat_p95_threshold": 60.0,
+      "disk_radius": 5,
+      "hist_bins": 30,
+      "thresh_range": [
+        1.0,
+        4.0
+      ],
+      "keep": "all",
+      "min_area_frac": 0.0001,
+      "color": [
+        0,
+        180,
+        255
+      ],
+      "alpha_blend": 0.4
+    },
+    "folds": {
+      "alpha": 0.64,
+      "d_beta": 0.34,
+      "stain2_beta": 0.25,
+      "min_area_um2": 3276.8,
+      "opening_radius": 3,
+      "speck_max_area_um2": 13144.0,
+      "speck_min_circularity": 0.5,
+      "min_boundary_contrast_d": 0.4,
+      "min_boundary_contrast_stain2": 0.1,
+      "contrast_band_px": 3,
+      "fallback_min_area_px": 51,
+      "fallback_speck_max_area_px": 205,
+      "macenko_beta": 0.15,
+      "macenko_alpha": 1.0,
+      "stain2_sweep_pctl": [
+        0.5,
+        99.5
+      ],
+      "stain2_sweep_levels": 41,
+      "color": [
+        255,
+        215,
+        0
+      ],
+      "d_path_stains": [
+        "hirano",
+        "lfb",
+        "lfb/h&e",
+        "lfb-he",
+        "lfb/he"
+      ],
+      "fline_enabled": true,
+      "fline_sigmas_um": [
+        35.0,
+        70.0,
+        105.0
+      ],
+      "fline_ball_um": 520.0,
+      "fline_st_sigma_um": 70.0,
+      "fline_eps_frac": 0.01,
+      "fline_hard_index": 200,
+      "fline_min_area_um2": 44800.0
+    },
+    "staining": {},
+    "focus": {},
+    "pen": {
+      "weights_path": "external/weights/pen.pt",
+      "pen_class": 1,
+      "tile_px": null,
+      "halo_px": 64,
+      "device": "cpu",
+      "color": [
+        0,
+        200,
+        0
+      ]
+    }
+  },
+  "m3": {
+    "read": {
+      "tile_target_mpp": 0.5,
+      "chunk_target_mpp": 2.0,
+      "halo_out_px": 4
+    },
+    "tiles": {},
+    "tile_metrics": {
+      "max_mask_bytes": 536870912,
+      "progress_every_s": 30.0,
+      "chunk_reseg_min": 0.1,
+      "drop_below": 0.2,
+      "resegment_edges": true,
+      "alpha_blend": 0.5
+    },
+    "artifacts": {
+      "classes": [
+        "fold",
+        "pen",
+        "bubble"
+      ],
+      "model_mpp": 1.0,
+      "repo_path": "external/grandqc/repo/01_WSI_inference_OPENSLIDE_QC",
+      "python": null,
+      "min_fraction": null,
+      "device": "cpu"
+    }
+  },
+  "m4": {
+    "method": "macenko",
+    "methods": [
+      "macenko",
+      "reinhard"
+    ],
+    "angular_percentile": 99.0,
+    "od_eps": 1e-06,
+    "eps": 1e-08,
+    "min_tissue_px": 3,
+    "provenance_dir": "reports",
+    "stain_aliases": {
+      "abeta": "AMYB",
+      "beta-amy": "AMYB",
+      "amyb": "AMYB",
+      "asyn": "ASYN",
+      "at": "AT8",
+      "at8": "AT8",
+      "gfap": "GFAP",
+      "he": "HE",
+      "h&e": "HE",
+      "hirano": "Hirano",
+      "i6": "I6",
+      "lfb": "LFB-HE",
+      "lfb/h&e": "LFB-HE",
+      "lfb-he": "LFB-HE",
+      "neun": "NEUN"
+    },
+    "reference": {
+      "AMYB": {
+        "reference_slide_id": "46021",
+        "dataset": "PART",
+        "fitted_at_mpp": 8.1088,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.636276,
+              0.555688,
+              0.535129
+            ],
+            [
+              0.245533,
+              0.815223,
+              0.524524
+            ]
+          ],
+          "maxC": [
+            1.011123,
+            1.519339
+          ]
+        },
+        "reinhard": {
+          "means": [
+            75.278913,
+            4.918552,
+            -4.224766
+          ],
+          "stds": [
+            10.232927,
+            6.896213,
+            2.606919
+          ]
+        }
+      },
+      "ASYN": {
+        "reference_slide_id": "H20.33.035-A6-ASYN",
+        "dataset": "SEA-AD",
+        "fitted_at_mpp": 8.0257,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.662134,
+              0.660972,
+              0.35312
+            ],
+            [
+              0.494244,
+              0.563493,
+              0.661966
+            ]
+          ],
+          "maxC": [
+            0.554066,
+            0.234012
+          ]
+        },
+        "reinhard": {
+          "means": [
+            87.379927,
+            1.768995,
+            -3.369633
+          ],
+          "stds": [
+            4.321321,
+            1.627243,
+            3.498917
+          ]
+        }
+      },
+      "AT8": {
+        "reference_slide_id": "46906",
+        "dataset": "PART",
+        "fitted_at_mpp": 8.1066,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.654088,
+              0.625441,
+              0.425433
+            ],
+            [
+              0.543368,
+              0.58838,
+              0.5988
+            ]
+          ],
+          "maxC": [
+            0.330568,
+            0.340529
+          ]
+        },
+        "reinhard": {
+          "means": [
+            87.812371,
+            2.209335,
+            -2.923186
+          ],
+          "stds": [
+            3.841806,
+            0.722446,
+            1.750412
+          ]
+        }
+      },
+      "GFAP": {
+        "reference_slide_id": "H20.33.013-A1-GFAP",
+        "dataset": "SEA-AD",
+        "fitted_at_mpp": 8.027,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.632908,
+              0.623656,
+              0.458782
+            ],
+            [
+              0.316988,
+              0.532949,
+              0.784528
+            ]
+          ],
+          "maxC": [
+            0.553073,
+            1.541543
+          ]
+        },
+        "reinhard": {
+          "means": [
+            73.746475,
+            3.927098,
+            8.527133
+          ],
+          "stds": [
+            9.059571,
+            2.95157,
+            6.444406
+          ]
+        }
+      },
+      "HE": {
+        "reference_slide_id": "Case_7_6_HE",
+        "dataset": "QSBB",
+        "fitted_at_mpp": 3.6876,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.593459,
+              0.57815,
+              0.559954
+            ],
+            [
+              0.090087,
+              0.903494,
+              0.419026
+            ]
+          ],
+          "maxC": [
+            0.583938,
+            0.910929
+          ]
+        },
+        "reinhard": {
+          "means": [
+            65.333697,
+            37.736339,
+            -11.481247
+          ],
+          "stds": [
+            8.086768,
+            10.81809,
+            2.672685
+          ]
+        }
+      },
+      "Hirano": {
+        "reference_slide_id": "45154",
+        "dataset": "PART",
+        "fitted_at_mpp": 8.1072,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.421605,
+              0.579767,
+              0.697222
+            ],
+            [
+              0.23123,
+              0.477493,
+              0.847663
+            ]
+          ],
+          "maxC": [
+            1.984013,
+            2.408159
+          ]
+        },
+        "reinhard": {
+          "means": [
+            47.216813,
+            15.841493,
+            24.426538
+          ],
+          "stds": [
+            9.19425,
+            4.116965,
+            5.702412
+          ]
+        }
+      },
+      "I6": {
+        "reference_slide_id": "H20.33.012-A2-I6",
+        "dataset": "SEA-AD",
+        "fitted_at_mpp": 8.0256,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.73125,
+              0.597945,
+              0.32823
+            ],
+            [
+              0.4883,
+              0.569515,
+              0.661223
+            ]
+          ],
+          "maxC": [
+            1.069863,
+            0.460596
+          ]
+        },
+        "reinhard": {
+          "means": [
+            80.305553,
+            0.708533,
+            -3.078878
+          ],
+          "stds": [
+            7.156414,
+            1.988819,
+            5.540998
+          ]
+        }
+      },
+      "LFB-HE": {
+        "reference_slide_id": "H21.33.042-A2-LFB",
+        "dataset": "SEA-AD",
+        "fitted_at_mpp": 16.1611,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.663686,
+              0.699541,
+              0.264882
+            ],
+            [
+              0.339126,
+              0.893038,
+              0.295766
+            ]
+          ],
+          "maxC": [
+            1.945643,
+            1.22742
+          ]
+        },
+        "reinhard": {
+          "means": [
+            49.844532,
+            31.698226,
+            -29.401281
+          ],
+          "stds": [
+            12.937235,
+            10.291326,
+            9.291392
+          ]
+        }
+      },
+      "NEUN": {
+        "reference_slide_id": "H21.33.046-A12-NEUN",
+        "dataset": "SEA-AD",
+        "fitted_at_mpp": 8.0272,
+        "is_placeholder": true,
+        "macenko": {
+          "stain_matrix": [
+            [
+              0.639296,
+              0.589432,
+              0.493833
+            ],
+            [
+              0.330335,
+              0.531975,
+              0.779668
+            ]
+          ],
+          "maxC": [
+            0.382325,
+            0.644291
+          ]
+        },
+        "reinhard": {
+          "means": [
+            86.981364,
+            1.246414,
+            2.965193
+          ],
+          "stds": [
+            5.061289,
+            1.57959,
+            3.785094
+          ]
+        }
+      }
+    }
+  },
+  "report": {
+    "out_dir": "reports",
+    "focus_outlier_n": 20
+  },
+  "thresholds": {
+    "m2.tissue.tissue_coverage_score": {
+      "min": null,
+      "max": null
+    },
+    "m2.folds.fold_area_fraction": {
+      "min": null,
+      "max": null
+    },
+    "m2.pen.pen_area_fraction": {
+      "min": null,
+      "max": null
+    },
+    "m2.focus.focus_score": {
+      "min": null,
+      "max": null
+    },
+    "m3.tiles.kept_fraction": {
+      "min": null,
+      "max": null
+    },
+    "m3.tiles.focus_median": {
+      "min": null,
+      "max": null
+    },
+    "m2.staining.staining_quality_score": {
+      "min": null,
+      "max": null,
+      "by_stain": {
+        "HE": {
+          "min": null,
+          "max": null
+        },
+        "LFB-HE": {
+          "min": null,
+          "max": null
+        },
+        "Hirano": {
+          "min": null,
+          "max": null
+        },
+        "GFAP": {
+          "min": null,
+          "max": null
+        },
+        "AMYB": {
+          "min": null,
+          "max": null
+        },
+        "ASYN": {
+          "min": null,
+          "max": null
+        },
+        "AT8": {
+          "min": null,
+          "max": null
+        },
+        "I6": {
+          "min": null,
+          "max": null
+        },
+        "NEUN": {
+          "min": null,
+          "max": null
+        }
+      }
+    }
+  },
+  "_observed_chroma_mean": {
+    "_note": "REFERENCE DATA, NOT THRESHOLDS. Cohort percentiles of m2.staining.chroma_mean over the 171-slide godset171 run (2026-08-04), provided so whoever sets the by_stain bands has the numbers to hand. Nothing reads this key. WARNING: these describe what this corpus looks like INCLUDING its bad slides -- using p05/p95 as bounds would be cohort-relative outlier detection wearing an absolute score's clothes. They were also measured at the NATIVE top level at varying MPP, not the 8.0 um/px plane the pipeline now uses.",
+    "stains": {
+      "HE": {
+        "n": 18,
+        "p05": 29.101,
+        "p25": 34.677,
+        "p50": 40.005,
+        "p75": 43.811,
+        "p95": 48.033
+      },
+      "LFB-HE": {
+        "n": 33,
+        "p05": 23.601,
+        "p25": 33.137,
+        "p50": 37.093,
+        "p75": 38.464,
+        "p95": 44.252
+      },
+      "Hirano": {
+        "n": 20,
+        "p05": 19.088,
+        "p25": 28.715,
+        "p50": 31.682,
+        "p75": 34.138,
+        "p95": 37.354
+      },
+      "GFAP": {
+        "n": 9,
+        "p05": 5.892,
+        "p25": 7.969,
+        "p50": 8.581,
+        "p75": 11.387,
+        "p95": 14.344
+      },
+      "AMYB": {
+        "n": 25,
+        "p05": 2.821,
+        "p25": 3.773,
+        "p50": 5.601,
+        "p75": 7.331,
+        "p95": 13.573
+      },
+      "ASYN": {
+        "n": 17,
+        "p05": 2.56,
+        "p25": 3.67,
+        "p50": 4.633,
+        "p75": 9.616,
+        "p95": 17.678
+      },
+      "AT8": {
+        "n": 31,
+        "p05": 1.77,
+        "p25": 3.773,
+        "p50": 4.282,
+        "p75": 7.006,
+        "p95": 11.614
+      },
+      "I6": {
+        "n": 9,
+        "p05": 3.214,
+        "p25": 3.527,
+        "p50": 3.84,
+        "p75": 4.323,
+        "p95": 4.785
+      },
+      "NEUN": {
+        "n": 9,
+        "p05": 2.441,
+        "p25": 3.277,
+        "p50": 3.612,
+        "p75": 4.451,
+        "p95": 4.998
+      }
+    }
+  }
+}

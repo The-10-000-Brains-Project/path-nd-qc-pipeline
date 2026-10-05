@@ -1,0 +1,5 @@
+{
+  "PathNDQC.slide": "slide",
+  "PathNDQC.stain": "stain",
+  "PathNDQC.docker_image": "docker_image"
+}

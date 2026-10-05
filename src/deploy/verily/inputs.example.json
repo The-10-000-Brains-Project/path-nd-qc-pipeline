@@ -1,0 +1,21 @@
+{
+  "PathNDQC.slide": "gs://YOUR_SLIDE_BUCKET/example.svs",
+  "PathNDQC.stain": "Hirano",
+  "PathNDQC.docker_image": "REGION-docker.pkg.dev/PROJECT/REPOSITORY/pathnd-qc@sha256:IMAGE_DIGEST",
+  "PathNDQC.components": [
+    "tissue_segmentation",
+    "fold_detection",
+    "pen_detection",
+    "staining_quality",
+    "focus",
+    "tile_selection",
+    "tile_metrics",
+    "tile_artifacts",
+    "stain_normalization"
+  ],
+  "PathNDQC.cpu": 4,
+  "PathNDQC.memory_gb": 16,
+  "PathNDQC.disk_gb": 100,
+  "PathNDQC.expected_pipeline_version": "0.5.0",
+  "PathNDQC.config_file": "gs://YOUR_CONFIG_BUCKET/references.json"
+}
