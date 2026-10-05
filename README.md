@@ -32,7 +32,7 @@ its measurements and using suitable thresholds and normalization references.
 | Verily workflows | Running the pipeline in a workflow workspace using the supplied WDLs | [Verily usage](src/USAGE_VERILY.md) |
 
 All three use the same pipeline and component configuration. For an interactive walkthrough, open
-[the demo notebook](pathnd_qc_demo.ipynb) at the repository root and follow its setup cells. Use the installed
+[the demo notebook](demo.ipynb) at the repository root and follow its setup cells. Use the installed
 Python environment as its kernel; the example needs access to its slide and uses provisional
 normalization targets.
 
@@ -55,7 +55,7 @@ The repository is organized as follows:
 | Area | Purpose |
 |---|---|
 | [src/](src/README.md) | Standalone Python project, usage guides, runtime package and deployment files |
-| [pathnd_qc_demo.ipynb](pathnd_qc_demo.ipynb) | Standalone interactive pipeline demonstration |
+| [demo.ipynb](demo.ipynb) | Standalone interactive pipeline demonstration |
 | [THIRD_PARTY_NOTICES.md](src/THIRD_PARTY_NOTICES.md) | Terms and attribution for bundled models and example images |
 
 For individual source files, start with the [source inventory](src/README.md#project-files).
