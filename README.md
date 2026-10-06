@@ -1,5 +1,7 @@
 # Path-ND QC
 
+> **Status:** Early beta, for research use only, not validated for clinical use.
+
 Path-ND QC is a whole-slide image quality-control and preprocessing pipeline for neuropathology
 research in The 10,000 Brains Project. It helps researchers inspect slide quality, identify tissue
 and artifacts, measure image tiles, and normalize stain appearance against chosen references.
