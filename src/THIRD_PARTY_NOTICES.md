@@ -49,3 +49,9 @@ permit non-commercial redistribution and derivative works with attribution under
 [Allen Institute Citation Policy](https://alleninstitute.org/citation-policy/). Cite:
 Gabitto M.I., Travaglini K.J. et al. "Integrated multimodal cell atlas of Alzheimer's disease."
 *Nature Neuroscience* (2024). https://doi.org/10.1038/s41593-024-01774-5
+
+## PART example images
+
+The user manual's figures (`docs/images/42669_*`) show slide 42669 from the PART collection. They
+are used with permission and are not licensed under the Apache License 2.0. Do not reuse them
+outside this project without permission from the collection's owners.

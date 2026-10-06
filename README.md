@@ -33,7 +33,8 @@ its measurements and using suitable thresholds and normalization references.
 | Command line | Processing one slide or a resumable batch from a terminal | [CLI usage](src/USAGE_CLI.md) |
 | Verily workflows | Running the pipeline in a workflow workspace using the supplied WDLs | [Verily usage](src/USAGE_VERILY.md) |
 
-All three use the same pipeline and component configuration. For an interactive walkthrough, open
+All three use the same pipeline and component configuration. The [user manual](docs/manual.md)
+walks through a full run on one slide, with figures for every component. For an interactive walkthrough, open
 [the demo notebook](demo.ipynb) at the repository root and follow its setup cells. Use the installed
 Python environment as its kernel; the example needs access to its slide and uses provisional
 normalization targets.
@@ -57,6 +58,7 @@ The repository is organized as follows:
 | Area | Purpose |
 |---|---|
 | [src/](src/README.md) | Standalone Python project, usage guides, runtime package and deployment files |
+| [docs/manual.md](docs/manual.md) | User manual: a worked example of every component on one slide |
 | [demo.ipynb](demo.ipynb) | Standalone interactive pipeline demonstration |
 | [LICENSE](LICENSE) | Apache License 2.0 |
 | [THIRD_PARTY_NOTICES.md](src/THIRD_PARTY_NOTICES.md) | Terms and attribution for bundled models and example images |
