@@ -85,9 +85,9 @@ Prepared WDLs pin that fingerprint in their defaults; keep it matched to your re
 | Run | Example | What to provide |
 |---|---|---|
 | Tissue + pen + tile selection + GrandQC | [Model check inputs](deploy/verily/inputs.models-check.example.json) | Slide, stain and matching image; optional custom pen checkpoint |
-| All nine components | [Full inputs](deploy/verily/inputs.example.json) | The above plus `config_file` containing suitable normalization targets |
+| All nine components | [Full inputs](deploy/verily/inputs.example.json) | Slide and stain; optional `config_file` to override the shipped placeholder targets |
 | All nine with metadata | [Metadata inputs](deploy/verily/inputs.models.example.json) | The above plus explicit metadata files |
-| All nine from a source archive | [Bucket inputs](deploy/verily/inputs.bucket.example.json) | Source archive/checksum, slide and reference configuration; optional custom pen checkpoint |
+| All nine from a source archive | [Bucket inputs](deploy/verily/inputs.bucket.example.json) | Source archive/checksum and slide; optional reference configuration and custom pen checkpoint |
 
 Use copies emitted into the prepared release when available: their identity/checksum fields are
 filled in. The source-tree templates contain placeholders. Full runs include normalization;
@@ -127,7 +127,13 @@ standalone JSON uses the same names without the prefix. Start from
 | `no_save_artifacts`, `quiet` | Forward the corresponding pipeline flags; report/completion output remains available |
 | `expected_pipeline_version` | Exact version guard, default `0.5.0` |
 | `expected_source_sha256` | Optional exact pipeline source fingerprint guard |
-| `cpu`, `memory_gb`, `disk_gb` | Defaults 4 CPUs, 16 GB RAM, 100 GB task disk; choose allocations for your slides |
+| `cpu`, `memory_gb`, `disk_gb` | Defaults 4 CPUs, 50 GB RAM, 100 GB task disk (see below) |
+
+**Memory for Verily jobs:** the tested full-pipeline run failed with **16 GB RAM** and succeeded
+with **50 GB RAM**, so both WDLs default to `memory_gb` 50. Allocations between 16 and 50 GB were
+**not tested**, so the minimum required memory has not been established; 50 GB is the observed
+successful allocation. Lighter component selections may run with less: set `PathNDQC.memory_gb`
+explicitly after checking a pilot slide.
 
 No metadata directory or bank is searched automatically. The first matching explicit metadata file
 wins. Producers are not automatically selected for modular runs: select them or supply the required
@@ -182,9 +188,10 @@ WDL's default or omit it, and add `source_archive` plus its checksum. Startup do
 route slower than a prebuilt inference image. Both provided routes use CPU inference; GPU resources
 are not configured by these WDLs.
 
-**Normalization:** the ninth component needs `config_file` with suitable reference values, plus
-selected/provided artifacts. The bundled references are placeholders. Supplying an arbitrary config
-file is not calibration. See [model setup](pathnd_qc/external/README.md) and
+**Normalization:** without `config_file`, the ninth component uses the shipped `m4.reference`
+defaults and logs a warning that they are placeholders. A supplied `config_file` overrides the
+defaults as usual; the selected stain must have a matching reference. Provide suitable targets
+before treating the normalized output as calibrated. Supplying an arbitrary config file is not calibration. See [model setup](pathnd_qc/external/README.md) and
 [normalization](pathnd_qc/normalization/README.md) for the underlying contracts.
 
 ## ConnSoftT + F_line fold settings
@@ -206,8 +213,9 @@ Use actual stains, including per-slide metadata in mixed batches. Reports retain
 measurements and physical parameters. If F_line fails while ConnSoftT succeeds, its mask remains available downstream, but incomplete execution always fails the workflow.
 A deliberate `fline_enabled=false` is a successful ConnSoftT-only selection.
 
-The CPU/RAM defaults remain 4 CPUs and 16 GB; a host synthetic resource probe does not establish a
-safe maximum for arbitrary WSI sizes. F_line adds arrays and filtering on the M2 plane. Increase RAM
+The CPU/RAM defaults are 4 CPUs and 50 GB, matching the tested full-pipeline workload described
+above. Neither that successful run nor a host synthetic resource probe
+establishes a safe allocation for arbitrary WSI sizes. F_line adds arrays and filtering on the M2 plane. Increase RAM
 for large planes and choose batch worker counts accordingly. See the [detector contract](pathnd_qc/qc_slide/folds/README.md) for algorithm details and limitations.
 
 ## Cloud reads and workflow caching
@@ -222,7 +230,11 @@ in the request JSON, which is retained with results.
 `slide_uri` and `metadata_uris` are WDL Strings: the engine does not localize or content-track them.
 Use immutable object names or disable call caching for mutable URI inputs to avoid reusing results
 after an object changes. WDL File inputs are localized by the engine according to its own storage
-support. The pipeline's range-read/localization behavior applies when it reads a URI directly.
+support. Both WDLs replace JSON File values with command-localized paths before bootstrap or
+pipeline execution, including the source archive, config, metadata, weights and supplied artifacts.
+Use filenames without line breaks. Paths embedded inside config JSON remain your responsibility;
+only declared WDL File inputs are localized. The pipeline's range-read/localization behavior applies
+when it reads a URI directly.
 
 Both wrappers accept only self-contained slide files. `.mrxs`, `.vms` and `.vmu` are rejected because
 companion-file staging is not implemented. One invocation processes one slide. CSV submissions run
@@ -270,7 +282,7 @@ archives do not change when these local files change: register/upload the new ve
 | Archive checksum mismatch | Verify the uploaded bytes and use the archive hash, not the pipeline fingerprint |
 | Pen download/setup fails | Check task network/provider access, or supply `pen_weights` as an accessible compatible checkpoint File |
 | GrandQC setup fails | Check the bootstrap log and network access; custom `grandqc_repo` must already exist inside the task |
-| Normalization configuration required | Supply `config_file` with suitable targets, or explicitly select a component set without normalization |
+| Placeholder normalization warning | The run uses shipped defaults because no `config_file` was supplied. Provide suitable targets to override them, or select components without normalization |
 | Missing mask or tiles | Select the producer or supply its WDL File input; dependencies are not added automatically |
 | Permission or download failure | Check task identity access to slide, metadata, archive, model and image resources |
 | No report output | Setup may have failed before analysis; inspect workflow task logs and bucket setup logs |

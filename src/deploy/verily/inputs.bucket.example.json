@@ -2,7 +2,7 @@
   "PathNDQC.slide": "gs://YOUR_SLIDE_BUCKET/example.svs",
   "PathNDQC.stain": "Hirano",
   "PathNDQC.cpu": 4,
-  "PathNDQC.memory_gb": 16,
+  "PathNDQC.memory_gb": 50,
   "PathNDQC.disk_gb": 100,
   "PathNDQC.source_archive": "gs://YOUR_WORKFLOW_BUCKET/pathnd-qc/0.5.0/pathnd_qc-0.5.0.tar.gz",
   "PathNDQC.source_sha256": "REPLACE_WITH_64_CHARACTER_ARCHIVE_SHA256",
@@ -17,6 +17,5 @@
     "tile_metrics",
     "tile_artifacts",
     "stain_normalization"
-  ],
-  "PathNDQC.config_file": "gs://YOUR_CONFIG_BUCKET/references.json"
+  ]
 }

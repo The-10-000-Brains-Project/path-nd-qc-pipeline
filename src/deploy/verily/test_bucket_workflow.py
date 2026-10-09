@@ -7,6 +7,8 @@ import hashlib
 import io
 import json
 import os
+import re
+import shlex
 from pathlib import Path
 from unittest.mock import patch
 import subprocess
@@ -81,6 +83,109 @@ class BucketWorkflowTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             return NAMESPACE["prepare_source"](self.params)
 
+    def localize_request(self, filename, params, localized, *, success=True):
+        """Render the actual command prelude with Cromwell-style localized File values."""
+        wdl = (HERE / filename).read_text()
+        if "bucket" in filename:
+            self.assertIn("python - localized-request.json <<'PATHND_BOOTSTRAP'", wdl)
+        else:
+            self.assertIn("python /opt/pathnd/run_workflow.py --request localized-request.json", wdl)
+        prelude = "    cat > localized-files.txt" + wdl.split("    cat > localized-files.txt", 1)[1]
+        prelude = textwrap.dedent(prelude.split("    PATHND_LOCALIZE\n", 1)[0] + "    PATHND_LOCALIZE\n")
+        Path("parameters.json").write_text(json.dumps(params))
+        values = {**localized, "parameters": str(Path("parameters.json").resolve())}
+
+        def substitute(match):
+            expression = match.group(1)
+            key = expression.split()[-1]
+            value = values.get(key)
+            if expression.startswith("sep="):
+                return "\n".join(value or [])
+            return value or ""
+
+        command = re.sub(r"~\{([^}]+)\}", substitute, prelude)
+        # Run with this test environment's interpreter rather than whichever Python is on PATH.
+        command = command.replace("python - <<", "exec " + shlex.quote(sys.executable) + " - <<")
+        result = subprocess.run(["bash", "-eu", "-c", command], capture_output=True, text=True)
+        if not success:
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            return result
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(Path("parameters.json").read_text()), params)
+        return json.loads(Path("localized-request.json").read_text())
+
+    def test_cloud_json_files_are_replaced_by_command_localizations_in_both_wdls(self):
+        for filename in ("pathnd_qc.wdl", "pathnd_qc_bucket.wdl"):
+            with self.subTest(wdl=filename):
+                wdl = (HERE / filename).read_text()
+                task_inputs = wdl.split("task ", 1)[1].split("  # JSON", 1)[0]
+                keys = re.findall(r"^    File\?? (\w+)$", task_inputs, re.MULTILINE)
+                arrays = re.findall(r"^    Array\[File\] (\w+)$", task_inputs, re.MULTILINE)
+                self.assertEqual(arrays, ["metadata_files"])
+                localized, params = {}, {"stain": "AT8", "components": ["tissue_segmentation"],
+                                         "slide_uri": "s3://remote/untouched.svs",
+                                         "metadata_uris": ["gs://remote/untouched.csv"]}
+                for key in keys:
+                    path = Path(f"{key} ' $(touch INJECTED) `touch INJECTED` \".dat").resolve()
+                    path.touch()
+                    localized[key] = str(path)
+                    params[key] = "gs://bucket/original/" + key
+                localized["metadata_files"] = [localized["metadata"], str(Path("second metadata.csv").resolve())]
+                Path(localized["metadata_files"][1]).touch()
+                params["metadata_files"] = ["gs://bucket/first.csv", "gs://bucket/second.csv"]
+                result = self.localize_request(filename, params, localized)
+                for key, value in localized.items():
+                    self.assertEqual(result[key], value)
+                for key in ("stain", "components", "slide_uri", "metadata_uris"):
+                    self.assertEqual(result[key], params[key])
+                self.assertFalse(Path("INJECTED").exists())
+
+    def test_absent_optional_files_and_remote_uri_mode_survive_localization(self):
+        for filename in ("pathnd_qc.wdl", "pathnd_qc_bucket.wdl"):
+            with self.subTest(wdl=filename):
+                params = {"slide": None, "slide_uri": "gs://bucket/slide.svs", "metadata_files": [],
+                          "metadata_uris": ["s3://bucket/metadata.csv"]}
+                localized = {}
+                if "bucket" in filename:
+                    self.archive()
+                    params["source_archive"] = "gs://bucket/source.tar.gz"
+                    localized["source_archive"] = self.params["source_archive"]
+                result = self.localize_request(filename, params, localized)
+                self.assertIsNone(result["slide"])
+                self.assertEqual(result["metadata_files"], [])
+                self.assertEqual(result["slide_uri"], params["slide_uri"])
+                self.assertEqual(result["metadata_uris"], params["metadata_uris"])
+
+    def test_unlocalized_file_is_rejected_before_bootstrap(self):
+        result = self.localize_request("pathnd_qc.wdl", {"slide": "gs://bucket/a.svs"},
+                                       {"slide": "gs://bucket/a.svs"}, success=False)
+        self.assertIn("not localized", result.stderr)
+
+    def test_missing_localized_value_and_line_breaks_fail_loudly(self):
+        result = self.localize_request("pathnd_qc.wdl", {"slide": "gs://bucket/a.svs"}, {}, success=False)
+        self.assertIn("Missing localized workflow input: slide", result.stderr)
+        path = Path("slide with\nline break.tif").resolve()
+        path.touch()
+        result = self.localize_request("pathnd_qc.wdl", {"slide": "gs://bucket/a.svs"},
+                                       {"slide": str(path)}, success=False)
+        self.assertIn("must not contain line breaks", result.stderr)
+
+    def test_localized_archive_reaches_bootstrap_and_adapter_request(self):
+        self.archive()
+        archive = self.params["source_archive"]
+        original = {**self.params, "source_archive": "gs://bucket/source.tar.gz", "docker_image": "fixture"}
+        with self.assertRaises(FileNotFoundError):
+            NAMESPACE["prepare_source"](original)
+        params = self.localize_request("pathnd_qc_bucket.wdl", original, {"source_archive": archive})
+        # main must consume the corrected request before opening the archive, then forward it.
+        with patch.dict(NAMESPACE, {"install_source": lambda root, request: self.assertEqual(request, params)}), \
+                patch("subprocess.run"), patch("os.execv") as execute, \
+                patch.object(Path, "write_text", autospec=True) as write:
+            NAMESPACE["main"]("localized-request.json")
+        self.assertTrue(Path("source/pathnd-qc-verily/deploy/verily/run_workflow.py").is_file())
+        self.assertEqual(execute.call_args.args[1][-2:], ["--request", str(Path("localized-request.json").resolve())])
+        self.assertTrue(write.called)
+
     def test_valid_archive_extracts_expected_layout(self):
         self.archive()
         root = self.prepare()
@@ -120,13 +225,28 @@ class BucketWorkflowTests(unittest.TestCase):
 
     def test_unknown_components_and_missing_model_inputs_fail_before_installation(self):
         for params in ({"components": []}, {"components": ["unknown"]},
-                       {"components": ["pen_detection"], "no_model_download": True},
-                       {"components": ["stain_normalization"]}, {},
-                       {"pen_weights": "pen.pt"}):
+                       {"components": ["pen_detection"], "no_model_download": True}):
             with self.subTest(params=params):
                 with patch.object(subprocess, "run") as calls, self.assertRaises(ValueError):
                     NAMESPACE["install_source"](self.source, params)
                 calls.assert_not_called()
+
+    def test_default_and_selected_normalization_allow_placeholder_references(self):
+        for params in ({}, {"components": ["stain_normalization"]}):
+            with self.subTest(params=params), patch.object(subprocess, "run") as calls, \
+                    contextlib.redirect_stderr(io.StringIO()) as stderr:
+                NAMESPACE["install_source"](self.source, params)
+            self.assert_standard_install([call.args[0] for call in calls.call_args_list])
+            self.assertIn("shipped m4.reference defaults", stderr.getvalue())
+            self.assertIn("placeholders", stderr.getvalue())
+
+    def test_supplied_config_and_unselected_normalization_do_not_warn(self):
+        for params in ({"components": ["stain_normalization"], "config_file": "config.json"},
+                       {"components": ["tissue_segmentation"]}):
+            with self.subTest(params=params), patch.object(subprocess, "run"), \
+                    contextlib.redirect_stderr(io.StringIO()) as stderr:
+                NAMESPACE["install_source"](self.source, params)
+            self.assertNotIn("without config_file", stderr.getvalue())
 
     def test_missing_default_pen_is_allowed_for_automatic_setup(self):
         with patch.object(subprocess, "run") as calls:
@@ -255,16 +375,20 @@ class BucketWorkflowTests(unittest.TestCase):
             self.prepare()
 
     @unittest.skipUnless(os.environ.get("PATHND_TEST_SOURCE_ARCHIVE"), "release archive not supplied")
-    def test_pinned_archive_runs_explicit_tissue_and_folds_on_real_tiff(self):
+    def test_pinned_archive_runs_tissue_folds_and_default_normalization_on_real_tiff(self):
         sys.path.insert(0, str(SRC / "tests"))
         from fake_slide import FakeSlide, write_tiff
         self.params.update(
             source_archive=os.environ["PATHND_TEST_SOURCE_ARCHIVE"],
             source_sha256=hashlib.sha256(Path(os.environ["PATHND_TEST_SOURCE_ARCHIVE"]).read_bytes()).hexdigest(),
-            components=["tissue_segmentation", "fold_detection"],
+            components=["tissue_segmentation", "fold_detection", "stain_normalization"],
             stain="Hirano", slide=str(Path("slide.tif").resolve()))
-        root = self.prepare()
         write_tiff(FakeSlide(base_wh=(2048, 1536), seed=43), "slide.tif")
+        localized = {key: self.params[key] for key in ("slide", "source_archive")}
+        self.params = self.localize_request("pathnd_qc_bucket.wdl",
+            {**self.params, "slide": "gs://bucket/slide.tif",
+             "source_archive": "gs://bucket/source.tar.gz"}, localized)
+        root = self.prepare()
         Path("params.json").write_text(json.dumps(self.params))
         result = subprocess.run(
             [sys.executable, str(root / "deploy/verily/run_workflow.py"), "params.json"],
@@ -281,6 +405,9 @@ class BucketWorkflowTests(unittest.TestCase):
         self.assertEqual(report["m2"]["folds"]["method"], "d+fline")
         self.assertIsNone(report["m2"]["folds"]["fline_error"])
         self.assertTrue(report["m2"]["folds"]["fline_enabled"])
+        self.assertTrue(report["m4"]["stain_norm"]["normalized"])
+        self.assertTrue(report["m4"]["stain_norm"]["is_placeholder"])
+        self.assertIn("shipped m4.reference defaults", result.stderr)
         with tarfile.open("results.tar.gz") as archive:
             self.assertIn("pipeline.log", archive.getnames())
             self.assertTrue(any(name.endswith("_report.json") for name in archive.getnames()))

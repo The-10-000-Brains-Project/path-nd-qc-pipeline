@@ -190,12 +190,46 @@ class WorkflowTests(unittest.TestCase):
         self.params["no_model_download"] = True
         self.assertIn("--no_model_download", adapter.build_command(self.params))
 
-    def test_model_and_normalization_prerequisites(self):
-        self.params["no_model_download"] = True
-        for name in ("pen_detection", "stain_normalization"):
-            self.params["components"] = [name]
-            with self.assertRaises(ValueError):
-                adapter.build_command(self.params)
+    def test_pen_prerequisites_with_downloads_disabled(self):
+        self.params.update(no_model_download=True, components=["pen_detection"])
+        with self.assertRaises(ValueError):
+            adapter.build_command(self.params)
+
+    def test_default_full_pipeline_allows_placeholder_references_with_warning(self):
+        self.params.pop("components")
+        with present_pen_dependencies(), self.assertLogs(level="WARNING") as logs:
+            command = adapter.build_command(self.params)
+        self.assertEqual({flag.removeprefix("--run_") for flag in command
+                          if flag.startswith("--run_")}, ALL_COMPONENTS)
+        self.assertIn("shipped m4.reference defaults", "\n".join(logs.output))
+        self.assertIn("placeholders", "\n".join(logs.output))
+
+    def test_normalization_uses_shipped_references_without_config(self):
+        self.params["components"] = ["tissue_segmentation", "stain_normalization"]
+        result = self.run_synthetic_slide()
+        normalized = json.loads(Path("report.json").read_text())["m4"]["stain_norm"]
+        self.assertTrue(normalized["normalized"])
+        self.assertTrue(normalized["is_placeholder"])
+        self.assertEqual(normalized["reference_key"], "Hirano")
+        self.assertIn("shipped m4.reference defaults", result.stderr)
+        self.assertIn("placeholders", result.stderr)
+
+    def test_normalization_config_overrides_shipped_references(self):
+        target = dict(self.config.cfg("m4.reference.Hirano"))
+        target.update(reference_slide_id="synthetic-custom-reference", is_placeholder=False)
+        config = Path("references.json").resolve()
+        config.write_text(json.dumps({"m4": {"reference": {"Hirano": target}}}))
+        self.params.update(components=["tissue_segmentation", "stain_normalization"], config_file=str(config))
+        result = self.run_synthetic_slide()
+        normalized = json.loads(Path("report.json").read_text())["m4"]["stain_norm"]
+        self.assertTrue(normalized["normalized"])
+        self.assertFalse(normalized["is_placeholder"])
+        self.assertEqual(normalized["reference_slide_id"], "synthetic-custom-reference")
+        self.assertNotIn("without config_file", result.stderr)
+
+    def test_unselected_normalization_does_not_warn_about_references(self):
+        with self.assertNoLogs(level="WARNING"):
+            adapter.build_command(self.params)
 
     def test_companion_file_slide_refused(self):
         Path("slide.mrxs").touch()
@@ -354,7 +388,6 @@ class WorkflowTests(unittest.TestCase):
         for component, inputs in (
             ("pen_detection", {"pen_weights": "missing-pen.pt"}),
             ("tile_artifacts", {"grandqc_repo": "missing-grandqc"}),
-            ("stain_normalization", {}),
         ):
             params = {**self.params, "components": [component], **inputs}
             Path("params.json").write_text(json.dumps(params))
@@ -506,6 +539,7 @@ class WorkflowTests(unittest.TestCase):
             for href in re.findall(r'href="([^"]+)"', page.read_text()):
                 self.assertFalse(href.startswith("/"), href)
                 self.assertTrue((page.parent / unquote(href)).is_file(), (page, href))
+        return result
 
 
 if __name__ == "__main__":
