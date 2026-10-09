@@ -12,6 +12,5 @@
     "tile_artifacts",
     "stain_normalization"
   ],
-  "expected_pipeline_version": "0.5.0",
-  "config_file": "/inputs/references.json"
+  "expected_pipeline_version": "0.5.0"
 }

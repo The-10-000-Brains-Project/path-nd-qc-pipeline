@@ -32,7 +32,7 @@ workflow PathNDQC {
     String expected_source_sha256 = ""
     String docker_image
     Int cpu = 4
-    Int memory_gb = 16
+    Int memory_gb = 50
     Int disk_gb = 100
   }
 
@@ -94,7 +94,7 @@ workflow PathNDQC {
     metadata_key: "Optional common key column for all metadata CSVs; requires at least one file/URI."
     no_metadata: "Explicit opt-out; incompatible with metadata paths or metadata_key. No paths also skips lookup."
     bank: "Optional bank for normalization reference selection; does not choose metadata files."
-    config_file: "JSON override File, including m2.folds F_line settings. See config.folds.example.json. M2 defaults to 8 um/px. Normalization needs suitable references; paths inside JSON are not localized."
+    config_file: "JSON override File, including m2.folds F_line settings. See config.folds.example.json. M2 defaults to 8 um/px. Without config_file, normalization uses shipped placeholder references with a warning. Paths inside JSON are not localized."
     norm_method: "Empty uses config; otherwise macenko or reinhard."
     pen_weights: "Compatible WSISegQC pen.pt File. Optional; missing default assets are installed automatically unless no_model_download is true."
     grandqc_repo: "Optional GrandQC inference-directory path already inside the image/task. Empty uses managed configuration."
@@ -113,7 +113,7 @@ workflow PathNDQC {
     expected_source_sha256: "Exact pipeline source fingerprint; release preparation pins this default to the frozen package."
     docker_image: "Image used by this task. For the image workflow select a complete 0.5.0 pipeline image; prefer a digest pin."
     cpu: "Starting CPU allocation; measure before scaling batches."
-    memory_gb: "Starting RAM allocation; model analyses may need more."
+    memory_gb: "RAM allocation. Default 50 GB: the tested full-pipeline run failed at 16 GB and succeeded at 50 GB; intermediate sizes were not tested."
     disk_gb: "Must fit localized inputs, model/source assets, results and the results archive."
   }
 }
@@ -153,7 +153,7 @@ task RunSlide {
     Int disk_gb
   }
 
-  # JSON transports values without interpolating user input into shell code.
+  # JSON transports scalar settings; the command replaces File values with localized paths.
   File parameters = write_json(object {
     slide: slide,
     slide_uri: slide_uri,
@@ -186,7 +186,44 @@ task RunSlide {
 
   command <<<
     set -euo pipefail
-    python /opt/pathnd/run_workflow.py --request '~{parameters}'
+    # File placeholders receive engine-localized paths; write_json may retain cloud URIs.
+    # A quoted heredoc keeps spaces, quotes and shell metacharacters literal.
+    cat > localized-files.txt <<'PATHND_LOCALIZED_FILES'
+    ~{parameters}
+    ~{default="" slide}
+    ~{default="" metadata}
+    ~{default="" config_file}
+    ~{default="" pen_weights}
+    ~{default="" thumbnail}
+    ~{default="" tissue_mask}
+    ~{default="" fold_mask}
+    ~{default="" pen_mask}
+    ~{default="" tile_list}
+    ~{sep="\n" metadata_files}
+    PATHND_LOCALIZED_FILES
+    python - <<'PATHND_LOCALIZE'
+    import json
+    from pathlib import Path
+
+    paths = Path("localized-files.txt").read_text().splitlines()
+    params = json.loads(Path(paths[0]).read_text())
+    keys = ['slide', 'metadata', 'config_file', 'pen_weights', 'thumbnail', 'tissue_mask', 'fold_mask', 'pen_mask', 'tile_list']
+    metadata_count = len(params.get("metadata_files", []))
+    if not metadata_count and paths[-1] == "":
+        paths.pop()
+    if len(paths) != 1 + len(keys) + metadata_count:
+        raise ValueError("Invalid localized file list; file paths must not contain line breaks")
+    for key, path in zip(keys, paths[1:]):
+        if params.get(key) and not path:
+            raise ValueError("Missing localized workflow input: " + key)
+        params[key] = path or None
+    params["metadata_files"] = paths[1 + len(keys):]
+    for path in paths[1:]:
+        if path and not Path(path).is_file():
+            raise FileNotFoundError("Workflow input was not localized to a readable file: " + path)
+    Path("localized-request.json").write_text(json.dumps(params))
+    PATHND_LOCALIZE
+    python /opt/pathnd/run_workflow.py --request localized-request.json
   >>>
 
   output {

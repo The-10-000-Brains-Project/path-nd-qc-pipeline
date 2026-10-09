@@ -34,7 +34,7 @@ workflow PathNDQC {
     File source_archive
     String source_sha256
     Int cpu = 4
-    Int memory_gb = 16
+    Int memory_gb = 50
     Int disk_gb = 100
   }
 
@@ -101,7 +101,7 @@ workflow PathNDQC {
     metadata_key: "Optional common key column for all metadata CSVs; requires at least one file/URI."
     no_metadata: "Explicit opt-out; incompatible with metadata paths or metadata_key. No paths also skips lookup."
     bank: "Optional bank for normalization reference selection; does not choose metadata files."
-    config_file: "JSON override File, including m2.folds F_line settings. See config.folds.example.json. M2 defaults to 8 um/px. Normalization needs suitable references; paths inside JSON are not localized."
+    config_file: "JSON override File, including m2.folds F_line settings. See config.folds.example.json. M2 defaults to 8 um/px. Without config_file, normalization uses shipped placeholder references with a warning. Paths inside JSON are not localized."
     norm_method: "Empty uses config; otherwise macenko or reinhard."
     pen_weights: "Compatible WSISegQC pen.pt File. Optional; missing default assets are installed automatically unless no_model_download is true."
     grandqc_repo: "Optional GrandQC inference-directory path already inside the image/task. Empty uses managed configuration."
@@ -122,7 +122,7 @@ workflow PathNDQC {
     source_archive: "Current source archive from prepare_release.py, staged as a workflow File. No historical archive default."
     source_sha256: "Required full SHA256 of source_archive, checked before extraction or installation."
     cpu: "Starting CPU allocation; measure before scaling batches."
-    memory_gb: "Starting RAM allocation; model analyses may need more."
+    memory_gb: "RAM allocation. Default 50 GB: the tested full-pipeline run failed at 16 GB and succeeded at 50 GB; intermediate sizes were not tested."
     disk_gb: "Must fit localized inputs, model/source assets, results and the results archive."
   }
 }
@@ -164,7 +164,7 @@ task RunSlideFromBucket {
     Int disk_gb
   }
 
-  # JSON transports values without interpolating user input into shell code.
+  # JSON transports scalar settings; the command replaces File values with localized paths.
   File parameters = write_json(object {
     slide: slide,
     slide_uri: slide_uri,
@@ -204,7 +204,45 @@ task RunSlideFromBucket {
     export PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1
     export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
     export PATHND_DATA_DIR=/opt/pathnd-models DEBIAN_FRONTEND=noninteractive
-    python - '~{parameters}' <<'PATHND_BOOTSTRAP'
+    # File placeholders receive engine-localized paths; write_json may retain cloud URIs.
+    # A quoted heredoc keeps spaces, quotes and shell metacharacters literal.
+    cat > localized-files.txt <<'PATHND_LOCALIZED_FILES'
+    ~{parameters}
+    ~{default="" slide}
+    ~{default="" metadata}
+    ~{default="" config_file}
+    ~{default="" pen_weights}
+    ~{default="" thumbnail}
+    ~{default="" tissue_mask}
+    ~{default="" fold_mask}
+    ~{default="" pen_mask}
+    ~{default="" tile_list}
+    ~{source_archive}
+    ~{sep="\n" metadata_files}
+    PATHND_LOCALIZED_FILES
+    python - <<'PATHND_LOCALIZE'
+    import json
+    from pathlib import Path
+
+    paths = Path("localized-files.txt").read_text().splitlines()
+    params = json.loads(Path(paths[0]).read_text())
+    keys = ['slide', 'metadata', 'config_file', 'pen_weights', 'thumbnail', 'tissue_mask', 'fold_mask', 'pen_mask', 'tile_list', 'source_archive']
+    metadata_count = len(params.get("metadata_files", []))
+    if not metadata_count and paths[-1] == "":
+        paths.pop()
+    if len(paths) != 1 + len(keys) + metadata_count:
+        raise ValueError("Invalid localized file list; file paths must not contain line breaks")
+    for key, path in zip(keys, paths[1:]):
+        if params.get(key) and not path:
+            raise ValueError("Missing localized workflow input: " + key)
+        params[key] = path or None
+    params["metadata_files"] = paths[1 + len(keys):]
+    for path in paths[1:]:
+        if path and not Path(path).is_file():
+            raise FileNotFoundError("Workflow input was not localized to a readable file: " + path)
+    Path("localized-request.json").write_text(json.dumps(params))
+    PATHND_LOCALIZE
+    python - localized-request.json <<'PATHND_BOOTSTRAP'
     import hashlib
     import json
     import os
@@ -267,7 +305,7 @@ task RunSlideFromBucket {
         if "pen_detection" in selected and (params.get("pen_weights") or params.get("no_model_download")) and not (pen_weights and Path(pen_weights).is_file()):
             raise ValueError("Bucket workflow pen_detection requires pen_weights or a configured checkpoint")
         if "stain_normalization" in selected and not params.get("config_file"):
-            raise ValueError("normalization requires config_file with suitable references")
+            print("WARNING: stain_normalization selected without config_file; using shipped m4.reference defaults. These references are placeholders, not calibrated normalization targets.", file=sys.stderr)
         subprocess.run(["apt-get", "update"], check=True)
         subprocess.run(["apt-get", "install", "-y", "--no-install-recommends",
                         "ca-certificates", "libgomp1", "libopenslide0", "git"], check=True)

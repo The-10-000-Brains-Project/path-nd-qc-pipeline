@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import logging
 import os
 from pathlib import Path
 import shutil
@@ -90,8 +91,7 @@ def build_command(params: dict) -> list[str]:
         if problem:
             raise ValueError(f"tile_artifacts requires a configured GrandQC checkout with checkpoints: {problem}")
     if "stain_normalization" in selected and not params.get("config_file"):
-        raise ValueError("normalization requires your reference configuration; "
-                         "the bundled references are placeholders")
+        logging.warning('stain_normalization selected without config_file; using shipped m4.reference defaults. These references are placeholders, not calibrated normalization targets.')
     command = [sys.executable, "-P", "-m", "pathnd_qc", "--slide", slide,
                "--out", str(Path("results").resolve())]
     for name in dict.fromkeys(selected):

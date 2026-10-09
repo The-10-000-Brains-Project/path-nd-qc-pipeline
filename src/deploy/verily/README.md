@@ -6,7 +6,9 @@ and pipeline/Git provenance. Both default to requesting all nine components. Set
 `components.<name>` to `false` in `config_file` to exclude it, including from explicit selections.
 Only the remaining components require model assets and must complete. Missing default assets are
 installed automatically by the pipeline. The bucket bootstrap applies the same selection when
-checking inputs, then installs the package before invoking the pipeline.
+checking inputs, then installs the package before invoking the pipeline. When normalization is
+selected without `config_file`, both wrappers warn and use the shipped placeholder references.
+Supply `config_file` to override them with suitable targets.
 
 The standard image includes GrandQC; pen is downloaded on first use unless supplied. The bucket
 route obtains both when selected. Set `PathNDQC.no_model_download` to `true` in WDL inputs
@@ -111,9 +113,9 @@ mkdir -p inputs outputs
 cp dist/deployment/0.5.0-release/request.compose.example.json inputs/request.json
 ```
 
-Place your slide and reference configuration in `inputs/`, edit `inputs/request.json`,
+Place your slide and any reference configuration in `inputs/`, edit `inputs/request.json`,
 and use [compose.yaml](../../compose.yaml) with the prepared context. Paths in that request are
-container paths (`/inputs/...`), not host paths. Supply a normalization reference configuration under the input mount for a full run.
+container paths (`/inputs/...`), not host paths. To override the shipped placeholder references, mount a configuration file and set `config_file` to its container path.
 Pen weights may be supplied or downloaded automatically; `no_model_download` disables that download. Each adapter run requires a fresh output directory without `results/`. Compose
 defaults to `dist/deployment/0.5.0-frozen/source` and image tag `0.5.0-frozen`; set
 `PATHND_RELEASE_DIR` for a different prepared snapshot and `PATHND_IMAGE` for its image.
@@ -152,7 +154,10 @@ before building; WDL checks validate syntax and types. Neither check submits clo
 WDL input/output semantics follow the [WDL 1.0 specification](https://github.com/openwdl/wdl/blob/legacy/versions/1.0/SPEC.md).
 
 The `test_workflow.py` and `test_bucket_workflow.py` suites exercise request handling and synthetic
-TIFF processing. Both use the shared `tests/fake_slide.py` under the source project (`src/tests/`
+TIFF processing. They also render the WDL localization prelude with cloud URIs in the parameters
+JSON and local paths in command placeholders, covering optional Files, metadata arrays and filenames
+with shell characters. The bucket archive test then runs the corrected request against the extracted
+source. These are local regression checks, not an end-to-end Cromwell/Verily run. Both use the shared `tests/fake_slide.py` under the source project (`src/tests/`
 in the repository). Run them from a checkout with the package dependencies installed; no separate
 development workspace or custom `PYTHONPATH` is needed. The fixture is excluded from release
 distributions, so run the suites from the checkout even when testing a built archive.
